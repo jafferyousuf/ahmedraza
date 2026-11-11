@@ -1,0 +1,1251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>beautiful calculater</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #eef1f8;
+      --bg-accent: #e4e9f7;
+      --calc-bg: #ffffff;
+      --calc-border: rgba(99, 102, 241, 0.12);
+      --text: #1a1d2e;
+      --text-muted: #6b7289;
+      --display-bg: #f6f7fc;
+      --display-border: rgba(99, 102, 241, 0.1);
+      --expr: #8b90a5;
+      --result: #1a1d2e;
+      --history-bg: #f8f9fd;
+      --history-item: #f0f2f8;
+      --shadow: 0 25px 60px rgba(79, 70, 229, 0.15), 0 8px 20px rgba(0, 0, 0, 0.06);
+      --btn-shadow: 0 4px 14px rgba(79, 70, 229, 0.25);
+      --num-bg: linear-gradient(145deg, #f8f9ff, #eef0fa);
+      --num-color: #2a2f45;
+      --num-border: rgba(99, 102, 241, 0.08);
+      --op-bg: linear-gradient(145deg, #6366f1, #8b5cf6);
+      --op-color: #ffffff;
+      --fn-bg: linear-gradient(145deg, #7c3aed, #4f46e5);
+      --fn-color: #ffffff;
+      --ac-bg: linear-gradient(145deg, #f43f5e, #e11d48);
+      --eq-bg: linear-gradient(145deg, #4f46e5, #7c3aed 50%, #a855f7);
+      --toggle-bg: #eef0f8;
+      --toggle-active: linear-gradient(135deg, #6366f1, #8b5cf6);
+      --overlay: rgba(238, 241, 248, 0.92);
+      --glow: transparent;
+      --radius: 28px;
+      --transition: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    [data-theme="dark"] {
+      --bg: #0a0b10;
+      --bg-accent: #12141c;
+      --calc-bg: #14161f;
+      --calc-border: rgba(139, 92, 246, 0.2);
+      --text: #f3f4f8;
+      --text-muted: #9ca3b8;
+      --display-bg: #0d0e14;
+      --display-border: rgba(139, 92, 246, 0.18);
+      --expr: #8b90a8;
+      --result: #f8f9ff;
+      --history-bg: #0d0e14;
+      --history-item: #1a1c28;
+      --shadow: 0 25px 60px rgba(0, 0, 0, 0.55), 0 0 40px rgba(99, 102, 241, 0.12);
+      --btn-shadow: 0 4px 18px rgba(99, 102, 241, 0.35);
+      --num-bg: linear-gradient(145deg, #1e2030, #181a26);
+      --num-color: #e8eaf2;
+      --num-border: rgba(139, 92, 246, 0.15);
+      --op-bg: linear-gradient(145deg, #4f46e5, #7c3aed);
+      --fn-bg: linear-gradient(145deg, #6d28d9, #4338ca);
+      --ac-bg: linear-gradient(145deg, #be123c, #9f1239);
+      --eq-bg: linear-gradient(145deg, #4338ca, #7c3aed 45%, #a855f7);
+      --toggle-bg: #1e2030;
+      --overlay: rgba(10, 11, 16, 0.94);
+      --glow: 0 0 20px rgba(139, 92, 246, 0.45);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      min-height: 100%;
+    }
+
+    body {
+      font-family: "Outfit", sans-serif;
+      background:
+        radial-gradient(ellipse 80% 50% at 20% 10%, rgba(99, 102, 241, 0.18), transparent 50%),
+        radial-gradient(ellipse 70% 45% at 85% 90%, rgba(168, 85, 247, 0.16), transparent 50%),
+        linear-gradient(160deg, var(--bg), var(--bg-accent));
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+      transition: background var(--transition), color var(--transition);
+      overflow-x: hidden;
+    }
+
+    /* Welcome overlay */
+    .welcome {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: var(--overlay);
+      backdrop-filter: blur(12px);
+      transition: opacity 0.7s ease, visibility 0.7s ease;
+    }
+
+    .welcome.hide {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .welcome-logo {
+      width: 72px;
+      height: 72px;
+      border-radius: 22px;
+      background: linear-gradient(145deg, #6366f1, #a855f7);
+      box-shadow: 0 12px 40px rgba(99, 102, 241, 0.45);
+      display: grid;
+      place-items: center;
+      color: #fff;
+      font-size: 2rem;
+      font-weight: 700;
+      animation: popIn 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .welcome h1 {
+      margin-top: 20px;
+      font-size: clamp(1.6rem, 4vw, 2.2rem);
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      background: linear-gradient(135deg, #4f46e5, #a855f7);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      animation: fadeUp 0.8s ease 0.15s both;
+    }
+
+    .welcome p {
+      margin-top: 8px;
+      color: var(--text-muted);
+      font-weight: 400;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      animation: fadeUp 0.8s ease 0.3s both;
+    }
+
+    .welcome-bar {
+      margin-top: 28px;
+      width: 120px;
+      height: 3px;
+      border-radius: 99px;
+      background: rgba(99, 102, 241, 0.2);
+      overflow: hidden;
+      animation: fadeUp 0.8s ease 0.4s both;
+    }
+
+    .welcome-bar span {
+      display: block;
+      height: 100%;
+      width: 0;
+      background: linear-gradient(90deg, #6366f1, #a855f7);
+      animation: loadBar 1.4s ease 0.5s forwards;
+    }
+
+    @keyframes popIn {
+      from { transform: scale(0.4) rotate(-8deg); opacity: 0; }
+      to { transform: scale(1) rotate(0); opacity: 1; }
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes loadBar {
+      to { width: 100%; }
+    }
+
+    @keyframes pulseGlow {
+      0%, 100% { box-shadow: var(--shadow); }
+      50% { box-shadow: var(--shadow), 0 0 50px rgba(139, 92, 246, 0.2); }
+    }
+
+    .app {
+      width: min(100%, 400px);
+      opacity: 0;
+      transform: translateY(24px) scale(0.96);
+      transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.34, 1.2, 0.64, 1);
+    }
+
+    .app.ready {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
+    .calculator {
+      background: var(--calc-bg);
+      border: 1px solid var(--calc-border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 22px 20px 20px;
+      transition: background var(--transition), border-color var(--transition), box-shadow var(--transition);
+      animation: pulseGlow 4s ease-in-out infinite;
+    }
+
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      gap: 10px;
+    }
+
+    .clock {
+      font-variant-numeric: tabular-nums;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      letter-spacing: 0.04em;
+      min-width: 70px;
+    }
+
+    .toggles {
+      display: flex;
+      gap: 8px;
+    }
+
+    .toggle-btn {
+      border: none;
+      cursor: pointer;
+      background: var(--toggle-bg);
+      color: var(--text-muted);
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      font-size: 1.05rem;
+      transition: transform 0.2s ease, background var(--transition), color var(--transition), box-shadow 0.2s ease;
+    }
+
+    .toggle-btn:hover {
+      transform: translateY(-2px);
+    }
+
+    .toggle-btn:active {
+      transform: scale(0.94);
+    }
+
+    .toggle-btn.active {
+      background: var(--toggle-active);
+      color: #fff;
+      box-shadow: var(--btn-shadow);
+    }
+
+    .brand {
+      text-align: center;
+      margin-bottom: 18px;
+    }
+
+    .brand h1 {
+      font-size: clamp(1.15rem, 4vw, 1.35rem);
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      background: linear-gradient(135deg, #4f46e5, #9333ea, #a855f7);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .brand p {
+      margin-top: 4px;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      font-weight: 400;
+      letter-spacing: 0.08em;
+    }
+
+    .display {
+      background: var(--display-bg);
+      border: 1px solid var(--display-border);
+      border-radius: 18px;
+      padding: 16px 16px 14px;
+      margin-bottom: 14px;
+      min-height: 96px;
+      transition: background var(--transition), border-color var(--transition);
+      position: relative;
+    }
+
+    .expression {
+      min-height: 22px;
+      font-size: 0.9rem;
+      color: var(--expr);
+      text-align: right;
+      word-break: break-all;
+      font-weight: 400;
+      letter-spacing: 0.02em;
+    }
+
+    .result-row {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    .result {
+      flex: 1;
+      text-align: right;
+      font-size: clamp(1.8rem, 7vw, 2.4rem);
+      font-weight: 600;
+      color: var(--result);
+      line-height: 1.15;
+      word-break: break-all;
+      transition: color var(--transition);
+    }
+
+    .result.error {
+      color: #f43f5e;
+      font-size: 1.35rem;
+    }
+
+    .copy-btn {
+      flex-shrink: 0;
+      border: none;
+      background: var(--toggle-bg);
+      color: var(--text-muted);
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      transition: transform 0.2s ease, background 0.2s ease, color 0.2s ease;
+    }
+
+    .copy-btn:hover {
+      background: var(--toggle-active);
+      color: #fff;
+      transform: translateY(-1px);
+    }
+
+    .copy-btn.copied {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #fff;
+    }
+
+    .history {
+      background: var(--history-bg);
+      border: 1px solid var(--display-border);
+      border-radius: 14px;
+      padding: 10px 12px;
+      margin-bottom: 14px;
+      max-height: 110px;
+      overflow-y: auto;
+      transition: background var(--transition), border-color var(--transition);
+    }
+
+    .history-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .history-header span {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .clear-history {
+      border: none;
+      background: transparent;
+      color: #a855f7;
+      font-family: inherit;
+      font-size: 0.72rem;
+      font-weight: 500;
+      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: 6px;
+      transition: background 0.2s ease;
+    }
+
+    .clear-history:hover {
+      background: rgba(168, 85, 247, 0.12);
+    }
+
+    .history-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .history-list li {
+      background: var(--history-item);
+      border-radius: 8px;
+      padding: 7px 10px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: transform 0.15s ease, background 0.2s ease;
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .history-list li:hover {
+      transform: translateX(2px);
+      background: rgba(99, 102, 241, 0.12);
+    }
+
+    .history-list li strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .history-empty {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      text-align: center;
+      padding: 6px 0;
+      opacity: 0.7;
+    }
+
+    .keys {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+
+    .btn {
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 1.15rem;
+      font-weight: 500;
+      height: 58px;
+      border-radius: 16px;
+      color: var(--op-color);
+      background: var(--op-bg);
+      box-shadow: var(--btn-shadow);
+      transition: transform 0.15s ease, filter 0.2s ease, box-shadow 0.2s ease;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at center, rgba(255, 255, 255, 0.35), transparent 65%);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+    }
+
+    .btn:hover {
+      filter: brightness(1.08);
+      transform: translateY(-2px);
+    }
+
+    .btn:active,
+    .btn.pressed {
+      transform: scale(0.94);
+      filter: brightness(0.95);
+    }
+
+    .btn:active::after,
+    .btn.pressed::after {
+      opacity: 1;
+    }
+
+    .btn-num {
+      background: var(--num-bg);
+      color: var(--num-color);
+      border: 1px solid var(--num-border);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      font-weight: 600;
+    }
+
+    [data-theme="dark"] .btn-num {
+      box-shadow: var(--glow);
+    }
+
+    .btn-fn {
+      background: var(--fn-bg);
+      font-size: 1rem;
+      font-weight: 500;
+    }
+
+    .btn-ac {
+      background: var(--ac-bg);
+      font-weight: 600;
+      letter-spacing: 0.04em;
+    }
+
+    .btn-eq {
+      background: var(--eq-bg);
+      font-size: 1.4rem;
+      font-weight: 600;
+      grid-row: span 2;
+      height: auto;
+      box-shadow: 0 6px 22px rgba(124, 58, 237, 0.4);
+    }
+
+    [data-theme="dark"] .btn-eq,
+    [data-theme="dark"] .btn-op,
+    [data-theme="dark"] .btn-fn {
+      box-shadow: var(--glow);
+    }
+
+    .btn-zero {
+      grid-column: span 2;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: linear-gradient(135deg, #4f46e5, #7c3aed);
+      color: #fff;
+      padding: 10px 18px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+      z-index: 50;
+      box-shadow: 0 8px 24px rgba(79, 70, 229, 0.35);
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* Scrollbar */
+    .history::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .history::-webkit-scrollbar-thumb {
+      background: rgba(139, 92, 246, 0.4);
+      border-radius: 99px;
+    }
+
+    @media (max-width: 420px) {
+      body { padding: 12px 10px; }
+      .calculator { padding: 16px 14px 14px; border-radius: 22px; }
+      .btn { height: 52px; border-radius: 14px; font-size: 1.05rem; gap: 8px; }
+      .keys { gap: 8px; }
+      .display { min-height: 84px; padding: 12px; }
+    }
+
+    @media (min-width: 768px) {
+      .app { width: min(100%, 420px); }
+      .btn { height: 62px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="welcome" id="welcome" aria-hidden="false">
+    <div class="welcome-logo">∑</div>
+    <h1>beautiful calculater</h1>
+    <p>genereted by Ahmed raza</p>
+    <div class="welcome-bar"><span></span></div>
+  </div>
+
+  <main class="app" id="app">
+    <div class="calculator" role="application" aria-label="beautiful calculater">
+      <div class="top-bar">
+        <div class="clock" id="clock" aria-live="polite">--:--:--</div>
+        <div class="toggles">
+          <button type="button" class="toggle-btn active" id="soundToggle" title="Toggle sound" aria-label="Toggle sound" aria-pressed="true">🔊</button>
+          <button type="button" class="toggle-btn" id="themeToggle" title="Toggle night mode" aria-label="Toggle night mode" aria-pressed="false">🌙</button>
+        </div>
+      </div>
+
+      <header class="brand">
+        <h1>beautiful calculater</h1>
+        <p>genereted by Ahmed raza</p>
+      </header>
+
+      <div class="display">
+        <div class="expression" id="expression" aria-live="polite"></div>
+        <div class="result-row">
+          <div class="result" id="result">0</div>
+          <button type="button" class="copy-btn" id="copyBtn" title="Copy result" aria-label="Copy result">⧉</button>
+        </div>
+      </div>
+
+      <section class="history" aria-label="Calculation history">
+        <div class="history-header">
+          <span>History</span>
+          <button type="button" class="clear-history" id="clearHistory">Clear</button>
+        </div>
+        <ul class="history-list" id="historyList"></ul>
+        <div class="history-empty" id="historyEmpty">No calculations yet</div>
+      </section>
+
+      <div class="keys" id="keys">
+        <button type="button" class="btn btn-ac" data-action="clear" data-sound="clear">AC</button>
+        <button type="button" class="btn btn-fn" data-action="backspace" data-sound="click">⌫</button>
+        <button type="button" class="btn btn-fn" data-action="percent" data-sound="click">%</button>
+        <button type="button" class="btn btn-op" data-action="operator" data-value="÷" data-sound="click">÷</button>
+
+        <button type="button" class="btn btn-fn" data-action="sqrt" data-sound="click">√</button>
+        <button type="button" class="btn btn-fn" data-action="square" data-sound="click">x²</button>
+        <button type="button" class="btn btn-fn" data-action="operator" data-value="^" data-sound="click">xʸ</button>
+        <button type="button" class="btn btn-op" data-action="operator" data-value="×" data-sound="click">×</button>
+
+        <button type="button" class="btn btn-fn" data-action="reciprocal" data-sound="click">1/x</button>
+        <button type="button" class="btn btn-fn" data-action="pi" data-sound="click">π</button>
+        <button type="button" class="btn btn-fn" data-action="negate" data-sound="click">+/−</button>
+        <button type="button" class="btn btn-op" data-action="operator" data-value="−" data-sound="click">−</button>
+
+        <button type="button" class="btn btn-num" data-action="digit" data-value="7" data-sound="click">7</button>
+        <button type="button" class="btn btn-num" data-action="digit" data-value="8" data-sound="click">8</button>
+        <button type="button" class="btn btn-num" data-action="digit" data-value="9" data-sound="click">9</button>
+        <button type="button" class="btn btn-op" data-action="operator" data-value="+" data-sound="click">+</button>
+
+        <button type="button" class="btn btn-num" data-action="digit" data-value="4" data-sound="click">4</button>
+        <button type="button" class="btn btn-num" data-action="digit" data-value="5" data-sound="click">5</button>
+        <button type="button" class="btn btn-num" data-action="digit" data-value="6" data-sound="click">6</button>
+        <button type="button" class="btn btn-eq" data-action="equals" data-sound="equals">=</button>
+
+        <button type="button" class="btn btn-num" data-action="digit" data-value="1" data-sound="click">1</button>
+        <button type="button" class="btn btn-num" data-action="digit" data-value="2" data-sound="click">2</button>
+        <button type="button" class="btn btn-num" data-action="digit" data-value="3" data-sound="click">3</button>
+
+        <button type="button" class="btn btn-num btn-zero" data-action="digit" data-value="0" data-sound="click">0</button>
+        <button type="button" class="btn btn-num" data-action="decimal" data-sound="click">.</button>
+      </div>
+    </div>
+  </main>
+
+  <div class="toast" id="toast" role="status"></div>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const STORAGE_THEME = "premium-calc-theme";
+      const STORAGE_SOUND = "premium-calc-sound";
+      const STORAGE_HISTORY = "premium-calc-history";
+      const MAX_HISTORY = 20;
+      const MAX_DIGITS = 16;
+
+      const els = {
+        welcome: document.getElementById("welcome"),
+        app: document.getElementById("app"),
+        clock: document.getElementById("clock"),
+        expression: document.getElementById("expression"),
+        result: document.getElementById("result"),
+        keys: document.getElementById("keys"),
+        soundToggle: document.getElementById("soundToggle"),
+        themeToggle: document.getElementById("themeToggle"),
+        copyBtn: document.getElementById("copyBtn"),
+        historyList: document.getElementById("historyList"),
+        historyEmpty: document.getElementById("historyEmpty"),
+        clearHistory: document.getElementById("clearHistory"),
+        toast: document.getElementById("toast"),
+      };
+
+      const state = {
+        current: "0",
+        previous: null,
+        operator: null,
+        waitingForOperand: false,
+        lastResult: null,
+        expressionText: "",
+        error: false,
+        soundOn: true,
+        history: [],
+      };
+
+      let audioCtx = null;
+      let toastTimer = null;
+
+      /* ---------- Theme ---------- */
+      function applyTheme(theme) {
+        const isDark = theme === "dark";
+        document.documentElement.setAttribute("data-theme", isDark ? "dark" : "light");
+        els.themeToggle.textContent = isDark ? "☀️" : "🌙";
+        els.themeToggle.classList.toggle("active", isDark);
+        els.themeToggle.setAttribute("aria-pressed", String(isDark));
+        localStorage.setItem(STORAGE_THEME, isDark ? "dark" : "light");
+      }
+
+      function toggleTheme() {
+        const current = document.documentElement.getAttribute("data-theme");
+        applyTheme(current === "dark" ? "light" : "dark");
+      }
+
+      /* ---------- Sound (Web Audio API) ---------- */
+      function getAudioCtx() {
+        if (!audioCtx) {
+          const Ctx = window.AudioContext || window.webkitAudioContext;
+          if (!Ctx) return null;
+          audioCtx = new Ctx();
+        }
+        if (audioCtx.state === "suspended") {
+          audioCtx.resume().catch(() => {});
+        }
+        return audioCtx;
+      }
+
+      function playTone({ freq, duration, type = "sine", gain = 0.08, slideTo = null, delay = 0 }) {
+        const ctx = getAudioCtx();
+        if (!ctx) return;
+
+        const osc = ctx.createOscillator();
+        const g = ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, ctx.currentTime + delay);
+        if (slideTo != null) {
+          osc.frequency.exponentialRampToValueAtTime(Math.max(slideTo, 1), ctx.currentTime + delay + duration);
+        }
+        g.gain.setValueAtTime(0.0001, ctx.currentTime + delay);
+        g.gain.exponentialRampToValueAtTime(gain, ctx.currentTime + delay + 0.01);
+        g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + delay + duration);
+        osc.connect(g);
+        g.connect(ctx.destination);
+        osc.start(ctx.currentTime + delay);
+        osc.stop(ctx.currentTime + delay + duration + 0.02);
+      }
+
+      function playSound(kind) {
+        if (!state.soundOn) return;
+        try {
+          if (kind === "equals") {
+            playTone({ freq: 523.25, duration: 0.12, type: "sine", gain: 0.07 });
+            playTone({ freq: 659.25, duration: 0.14, type: "sine", gain: 0.06, delay: 0.09 });
+            playTone({ freq: 783.99, duration: 0.18, type: "triangle", gain: 0.045, delay: 0.18 });
+          } else if (kind === "clear") {
+            playTone({ freq: 320, duration: 0.1, type: "triangle", gain: 0.05, slideTo: 180 });
+            playTone({ freq: 220, duration: 0.12, type: "sine", gain: 0.03, delay: 0.05 });
+          } else {
+            playTone({ freq: 880, duration: 0.045, type: "sine", gain: 0.035, slideTo: 620 });
+          }
+        } catch (_) {
+          /* ignore audio errors */
+        }
+      }
+
+      function applySound(on) {
+        state.soundOn = on;
+        els.soundToggle.textContent = on ? "🔊" : "🔇";
+        els.soundToggle.classList.toggle("active", on);
+        els.soundToggle.setAttribute("aria-pressed", String(on));
+        localStorage.setItem(STORAGE_SOUND, on ? "on" : "off");
+      }
+
+      /* ---------- Formatting ---------- */
+      function formatNumber(value) {
+        if (!Number.isFinite(value)) return "Error";
+        const abs = Math.abs(value);
+        if (abs !== 0 && (abs >= 1e12 || abs < 1e-9)) {
+          return value.toExponential(8).replace(/\.?0+e/, "e").replace(/e\+?/, "e");
+        }
+        let str = Number(value.toPrecision(12)).toString();
+        if (str.includes("e")) return str;
+        if (str.length > MAX_DIGITS) {
+          return value.toPrecision(10).replace(/\.?0+$/, "");
+        }
+        return str;
+      }
+
+      function showToast(message) {
+        els.toast.textContent = message;
+        els.toast.classList.add("show");
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => els.toast.classList.remove("show"), 1800);
+      }
+
+      function setError(message) {
+        state.error = true;
+        state.current = "0";
+        state.previous = null;
+        state.operator = null;
+        state.waitingForOperand = false;
+        state.expressionText = "";
+        els.expression.textContent = "";
+        els.result.textContent = message;
+        els.result.classList.add("error");
+      }
+
+      function clearError() {
+        if (!state.error) return;
+        state.error = false;
+        els.result.classList.remove("error");
+      }
+
+      function updateDisplay() {
+        els.expression.textContent = state.expressionText;
+        if (!state.error) {
+          els.result.textContent = state.current;
+          els.result.classList.remove("error");
+        }
+      }
+
+      function buildExpression(nextOp) {
+        if (state.previous == null) return "";
+        const opSymbol = nextOp === "^" ? "^" : nextOp;
+        return `${formatNumber(state.previous)} ${opSymbol}`;
+      }
+
+      /* ---------- Math ---------- */
+      function operate(a, op, b) {
+        switch (op) {
+          case "+": return a + b;
+          case "−": return a - b;
+          case "×": return a * b;
+          case "÷":
+            if (b === 0) return { error: "Cannot divide by zero" };
+            return a / b;
+          case "^": return Math.pow(a, b);
+          default: return b;
+        }
+      }
+
+      function commitPending() {
+        if (state.operator == null || state.previous == null || state.waitingForOperand) {
+          return true;
+        }
+        const a = state.previous;
+        const b = parseFloat(state.current);
+        const raw = operate(a, state.operator, b);
+        if (raw && typeof raw === "object" && raw.error) {
+          setError(raw.error);
+          return false;
+        }
+        if (!Number.isFinite(raw)) {
+          setError("Invalid result");
+          return false;
+        }
+        const formatted = formatNumber(raw);
+        state.lastResult = raw;
+        state.current = formatted;
+        state.previous = raw;
+        return true;
+      }
+
+      /* ---------- History ---------- */
+      function renderHistory() {
+        els.historyList.innerHTML = "";
+        const hasItems = state.history.length > 0;
+        els.historyEmpty.hidden = hasItems;
+        state.history.forEach((item, index) => {
+          const li = document.createElement("li");
+          li.innerHTML = `<span>${item.expr}</span><strong>${item.result}</strong>`;
+          li.title = "Tap to use result";
+          li.addEventListener("click", () => {
+            clearError();
+            state.current = item.result;
+            state.previous = null;
+            state.operator = null;
+            state.waitingForOperand = false;
+            state.expressionText = "";
+            updateDisplay();
+            playSound("click");
+          });
+          els.historyList.appendChild(li);
+          if (index === 0) {
+            /* newest first already */
+          }
+        });
+      }
+
+      function pushHistory(expr, result) {
+        state.history.unshift({ expr, result });
+        if (state.history.length > MAX_HISTORY) state.history.pop();
+        try {
+          localStorage.setItem(STORAGE_HISTORY, JSON.stringify(state.history));
+        } catch (_) { /* quota */ }
+        renderHistory();
+      }
+
+      function clearHistory() {
+        state.history = [];
+        localStorage.removeItem(STORAGE_HISTORY);
+        renderHistory();
+        playSound("clear");
+        showToast("History cleared");
+      }
+
+      /* ---------- Actions ---------- */
+      function inputDigit(digit) {
+        clearError();
+        if (state.waitingForOperand) {
+          state.current = digit;
+          state.waitingForOperand = false;
+        } else {
+          if (state.current.replace("-", "").replace(".", "").length >= MAX_DIGITS) return;
+          state.current = state.current === "0" ? digit : state.current + digit;
+        }
+        if (state.operator) {
+          state.expressionText = `${formatNumber(state.previous)} ${state.operator === "^" ? "^" : state.operator}`;
+        }
+        updateDisplay();
+      }
+
+      function inputDecimal() {
+        clearError();
+        if (state.waitingForOperand) {
+          state.current = "0.";
+          state.waitingForOperand = false;
+        } else if (!state.current.includes(".")) {
+          state.current += ".";
+        }
+        updateDisplay();
+      }
+
+      function handleOperator(op) {
+        clearError();
+        const inputValue = parseFloat(state.current);
+
+        if (state.operator && !state.waitingForOperand) {
+          if (!commitPending()) {
+            updateDisplay();
+            return;
+          }
+        } else {
+          state.previous = inputValue;
+        }
+
+        state.operator = op;
+        state.waitingForOperand = true;
+        state.expressionText = buildExpression(op);
+        state.current = formatNumber(state.previous);
+        updateDisplay();
+      }
+
+      function handleEquals() {
+        clearError();
+        if (state.operator == null || state.previous == null) {
+          updateDisplay();
+          return;
+        }
+
+        const a = state.previous;
+        const b = parseFloat(state.current);
+        const op = state.operator;
+        const expr = `${formatNumber(a)} ${op === "^" ? "^" : op} ${formatNumber(b)}`;
+        const raw = operate(a, op, b);
+
+        if (raw && typeof raw === "object" && raw.error) {
+          setError(raw.error);
+          updateDisplay();
+          return;
+        }
+        if (!Number.isFinite(raw)) {
+          setError("Invalid result");
+          updateDisplay();
+          return;
+        }
+
+        const formatted = formatNumber(raw);
+        state.expressionText = `${expr} =`;
+        state.current = formatted;
+        state.lastResult = raw;
+        state.previous = null;
+        state.operator = null;
+        state.waitingForOperand = true;
+        pushHistory(expr, formatted);
+        updateDisplay();
+      }
+
+      function handleClear() {
+        state.current = "0";
+        state.previous = null;
+        state.operator = null;
+        state.waitingForOperand = false;
+        state.expressionText = "";
+        state.error = false;
+        els.result.classList.remove("error");
+        updateDisplay();
+      }
+
+      function handleBackspace() {
+        clearError();
+        if (state.waitingForOperand || state.error) return;
+        if (state.current.length <= 1 || (state.current.length === 2 && state.current.startsWith("-"))) {
+          state.current = "0";
+        } else {
+          state.current = state.current.slice(0, -1);
+        }
+        updateDisplay();
+      }
+
+      function handlePercent() {
+        clearError();
+        const value = parseFloat(state.current);
+        if (!Number.isFinite(value)) return;
+        let result;
+        if (state.previous != null && state.operator && (state.operator === "+" || state.operator === "−")) {
+          result = state.previous * (value / 100);
+        } else {
+          result = value / 100;
+        }
+        state.current = formatNumber(result);
+        updateDisplay();
+      }
+
+      function handleNegate() {
+        clearError();
+        if (state.current === "0" || state.current === "0.") return;
+        state.current = state.current.startsWith("-")
+          ? state.current.slice(1)
+          : "-" + state.current;
+        updateDisplay();
+      }
+
+      function handleSqrt() {
+        clearError();
+        const value = parseFloat(state.current);
+        if (value < 0) {
+          setError("Invalid input");
+          updateDisplay();
+          return;
+        }
+        const result = Math.sqrt(value);
+        const formatted = formatNumber(result);
+        state.expressionText = `√(${formatNumber(value)}) =`;
+        state.current = formatted;
+        state.waitingForOperand = true;
+        state.operator = null;
+        state.previous = null;
+        pushHistory(`√(${formatNumber(value)})`, formatted);
+        updateDisplay();
+      }
+
+      function handleSquare() {
+        clearError();
+        const value = parseFloat(state.current);
+        const result = value * value;
+        if (!Number.isFinite(result)) {
+          setError("Invalid result");
+          updateDisplay();
+          return;
+        }
+        const formatted = formatNumber(result);
+        state.expressionText = `sqr(${formatNumber(value)}) =`;
+        state.current = formatted;
+        state.waitingForOperand = true;
+        state.operator = null;
+        state.previous = null;
+        pushHistory(`sqr(${formatNumber(value)})`, formatted);
+        updateDisplay();
+      }
+
+      function handleReciprocal() {
+        clearError();
+        const value = parseFloat(state.current);
+        if (value === 0) {
+          setError("Cannot divide by zero");
+          updateDisplay();
+          return;
+        }
+        const result = 1 / value;
+        const formatted = formatNumber(result);
+        state.expressionText = `1/(${formatNumber(value)}) =`;
+        state.current = formatted;
+        state.waitingForOperand = true;
+        state.operator = null;
+        state.previous = null;
+        pushHistory(`1/(${formatNumber(value)})`, formatted);
+        updateDisplay();
+      }
+
+      function handlePi() {
+        clearError();
+        state.current = formatNumber(Math.PI);
+        state.waitingForOperand = false;
+        updateDisplay();
+      }
+
+      async function copyResult() {
+        const text = els.result.textContent;
+        if (!text || state.error) {
+          showToast("Nothing to copy");
+          return;
+        }
+        try {
+          await navigator.clipboard.writeText(text);
+          els.copyBtn.classList.add("copied");
+          els.copyBtn.textContent = "✓";
+          showToast("Result copied");
+          playSound("equals");
+          setTimeout(() => {
+            els.copyBtn.classList.remove("copied");
+            els.copyBtn.textContent = "⧉";
+          }, 1200);
+        } catch (_) {
+          showToast("Copy failed");
+        }
+      }
+
+      function dispatchAction(action, value) {
+        switch (action) {
+          case "digit": inputDigit(value); break;
+          case "decimal": inputDecimal(); break;
+          case "operator": handleOperator(value); break;
+          case "equals": handleEquals(); break;
+          case "clear": handleClear(); break;
+          case "backspace": handleBackspace(); break;
+          case "percent": handlePercent(); break;
+          case "negate": handleNegate(); break;
+          case "sqrt": handleSqrt(); break;
+          case "square": handleSquare(); break;
+          case "reciprocal": handleReciprocal(); break;
+          case "pi": handlePi(); break;
+          default: break;
+        }
+      }
+
+      /* ---------- Events ---------- */
+      els.keys.addEventListener("click", (e) => {
+        const btn = e.target.closest("button[data-action]");
+        if (!btn) return;
+        const sound = btn.dataset.sound || "click";
+        playSound(sound);
+        dispatchAction(btn.dataset.action, btn.dataset.value);
+      });
+
+      els.themeToggle.addEventListener("click", () => {
+        playSound("click");
+        toggleTheme();
+      });
+
+      els.soundToggle.addEventListener("click", () => {
+        const next = !state.soundOn;
+        applySound(next);
+        if (next) playSound("click");
+      });
+
+      els.copyBtn.addEventListener("click", () => {
+        playSound("click");
+        copyResult();
+      });
+
+      els.clearHistory.addEventListener("click", clearHistory);
+
+      const keyMap = {
+        "0": { action: "digit", value: "0", sound: "click" },
+        "1": { action: "digit", value: "1", sound: "click" },
+        "2": { action: "digit", value: "2", sound: "click" },
+        "3": { action: "digit", value: "3", sound: "click" },
+        "4": { action: "digit", value: "4", sound: "click" },
+        "5": { action: "digit", value: "5", sound: "click" },
+        "6": { action: "digit", value: "6", sound: "click" },
+        "7": { action: "digit", value: "7", sound: "click" },
+        "8": { action: "digit", value: "8", sound: "click" },
+        "9": { action: "digit", value: "9", sound: "click" },
+        ".": { action: "decimal", sound: "click" },
+        ",": { action: "decimal", sound: "click" },
+        "+": { action: "operator", value: "+", sound: "click" },
+        "-": { action: "operator", value: "−", sound: "click" },
+        "*": { action: "operator", value: "×", sound: "click" },
+        "/": { action: "operator", value: "÷", sound: "click" },
+        "%": { action: "percent", sound: "click" },
+        "^": { action: "operator", value: "^", sound: "click" },
+        Enter: { action: "equals", sound: "equals" },
+        "=": { action: "equals", sound: "equals" },
+        Escape: { action: "clear", sound: "clear" },
+        Backspace: { action: "backspace", sound: "click" },
+        Delete: { action: "clear", sound: "clear" },
+        p: { action: "pi", sound: "click" },
+        P: { action: "pi", sound: "click" },
+      };
+
+      window.addEventListener("keydown", (e) => {
+        if (e.ctrlKey || e.metaKey || e.altKey) return;
+        const mapping = keyMap[e.key];
+        if (!mapping) return;
+        e.preventDefault();
+        playSound(mapping.sound);
+
+        const selector = mapping.value
+          ? `button[data-action="${mapping.action}"][data-value="${mapping.value}"]`
+          : `button[data-action="${mapping.action}"]`;
+        const btn = els.keys.querySelector(selector);
+        if (btn) {
+          btn.classList.add("pressed");
+          setTimeout(() => btn.classList.remove("pressed"), 120);
+        }
+        dispatchAction(mapping.action, mapping.value);
+      });
+
+      /* ---------- Clock ---------- */
+      function updateClock() {
+        const now = new Date();
+        els.clock.textContent = now.toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          hour12: false,
+        });
+      }
+
+      /* ---------- Boot ---------- */
+      function boot() {
+        const savedTheme = localStorage.getItem(STORAGE_THEME) || "light";
+        applyTheme(savedTheme);
+
+        const savedSound = localStorage.getItem(STORAGE_SOUND);
+        applySound(savedSound !== "off");
+
+        try {
+          const raw = localStorage.getItem(STORAGE_HISTORY);
+          if (raw) state.history = JSON.parse(raw) || [];
+        } catch (_) {
+          state.history = [];
+        }
+        renderHistory();
+        updateDisplay();
+        updateClock();
+        setInterval(updateClock, 1000);
+
+        setTimeout(() => {
+          els.welcome.classList.add("hide");
+          els.welcome.setAttribute("aria-hidden", "true");
+          els.app.classList.add("ready");
+        }, 1800);
+      }
+
+      boot();
+    })();
+  </script>
+</body>
+</html>
